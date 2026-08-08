@@ -1,7 +1,8 @@
 import imgkit
-from moviepy.editor import ImageClip, concatenate_videoclips
 from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 import os
+from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
+from config import DURATION
 
 def generate_images(quiz):
     from utils.html_generator import create_html
@@ -73,7 +74,7 @@ def generate_answer_slide(quiz):
 
 
     
-def create_video(images, output_file):
+"""def create_video(images, output_file):
     # ✅ Ensure output directory exists
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
@@ -83,4 +84,47 @@ def create_video(images, output_file):
     clips = [ImageClip(img).set_duration(DURATION) for img in images]
     video = concatenate_videoclips(clips)
 
-    video.write_videofile(output_file, fps=24)    
+    video.write_videofile(output_file, fps=24)    """
+
+def create_video(images, output_file):
+    try:
+        # ✅ Ensure output directory exists
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        print("🎬 Creating video clips...")
+        clips = [ImageClip(img).set_duration(DURATION) for img in images]
+
+        video = concatenate_videoclips(clips)
+
+        # =========================
+        # 🎵 ADD BACKGROUND MUSIC
+        # =========================
+        music_path = "assets/bg_music.mp3"
+
+        if os.path.exists(music_path):
+            print("🎵 Adding background music...")
+
+            audio = AudioFileClip(music_path)
+
+            # 🔁 Loop audio if shorter than video
+            if audio.duration < video.duration:
+                audio = audio.loop(duration=video.duration)
+            else:
+                audio = audio.subclip(0, video.duration)
+
+            # 🔉 Reduce volume (important)
+            audio = audio.volumex(0.2)
+
+            video = video.set_audio(audio)
+
+        else:
+            print("⚠️ Background music not found")
+
+        # =========================
+        # 🎥 EXPORT VIDEO
+        # =========================
+        print("📤 Rendering final video...")
+        video.write_videofile(output_file, fps=24)
+
+    except Exception as e:
+        print("❌ Error in create_video:", e)    
