@@ -1,5 +1,5 @@
 from services.video_service import get_logo_base64
-def create_html(q, index, timer=5):
+def create_html(q, index, timer=3):
     question = q["question"]
     options = q["options"]
 
