@@ -1,7 +1,7 @@
 import imgkit
 from moviepy.editor import ImageClip, concatenate_videoclips
 from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
-
+import os
 
 def generate_images(quiz):
     from utils.html_generator import create_html
@@ -50,8 +50,16 @@ def generate_answer_slide(quiz):
     return "answer.png"
 
 
-# ✅ ADD THIS FUNCTION
+
+    
 def create_video(images, output_file):
+    # ✅ Ensure output directory exists
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    from moviepy.editor import ImageClip, concatenate_videoclips
+    from config import DURATION
+
     clips = [ImageClip(img).set_duration(DURATION) for img in images]
     video = concatenate_videoclips(clips)
-    video.write_videofile(output_file, fps=24)
+
+    video.write_videofile(output_file, fps=24)    
