@@ -22,6 +22,7 @@ def run_pipeline():
     answer_img = generate_answer_slide(quiz)
     images.extend(answer_img)"""
 
+   
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)
     

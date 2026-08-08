@@ -31,7 +31,8 @@ def generate_images(quiz):
                 config=IMGKIT_CONFIG,
                 options={
                     "width": VIDEO_WIDTH,
-                    "height": VIDEO_HEIGHT
+                    "height": VIDEO_HEIGHT,
+                    "enable-local-file-access": ""
                 }
             )
 
