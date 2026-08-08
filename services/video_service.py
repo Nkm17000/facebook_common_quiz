@@ -1,11 +1,16 @@
 import os
 import imgkit
-from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
+from moviepy.editor import (
+    ImageClip,
+    concatenate_videoclips,
+    AudioFileClip,
+    CompositeAudioClip
+)
 from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 
 
 # =========================
-# GENERATE QUESTION + ANSWER IMAGES (ALTERNATE FLOW)
+# GENERATE IMAGES (WITH COUNTDOWN)
 # =========================
 def generate_images(quiz):
     from utils.html_generator import create_html
@@ -15,23 +20,24 @@ def generate_images(quiz):
 
     for i, q in enumerate(quiz):
 
-        # ✅ QUESTION SLIDE
-        html = create_html(q, i)
-        q_file = f"slide_{i}.png"
+        # 🔥 COUNTDOWN 5 → 1
+        for t in range(5, 0, -1):
+            html = create_html(q, i, timer=t)
+            file = f"slide_{i}_{t}.png"
 
-        imgkit.from_string(
-            html,
-            q_file,
-            config=IMGKIT_CONFIG,
-            options={
-                "width": VIDEO_WIDTH,
-                "height": VIDEO_HEIGHT
-            }
-        )
+            imgkit.from_string(
+                html,
+                file,
+                config=IMGKIT_CONFIG,
+                options={
+                    "width": VIDEO_WIDTH,
+                    "height": VIDEO_HEIGHT
+                }
+            )
 
-        images.append(q_file)
+            images.append(file)
 
-        # ✅ ANSWER SLIDE (IMMEDIATELY AFTER QUESTION)
+        # ✅ ANSWER SLIDE
         correct = q["options"][q["answer_index"]]
 
         ans_html = answer_html(
@@ -41,11 +47,11 @@ def generate_images(quiz):
             q["options"]
         )
 
-        a_file = f"answer_{i}.png"
+        ans_file = f"answer_{i}.png"
 
         imgkit.from_string(
             ans_html,
-            a_file,
+            ans_file,
             config=IMGKIT_CONFIG,
             options={
                 "width": VIDEO_WIDTH,
@@ -53,13 +59,13 @@ def generate_images(quiz):
             }
         )
 
-        images.append(a_file)
+        images.append(ans_file)
 
     return images
 
 
 # =========================
-# ANSWER HTML (GREEN HIGHLIGHT)
+# ANSWER HTML
 # =========================
 def answer_html(page, correct, correct_index, options):
     highlighted = []
@@ -129,7 +135,7 @@ def answer_html(page, correct, correct_index, options):
 
 
 # =========================
-# CREATE VIDEO (WITH SAFE AUDIO)
+# CREATE VIDEO (WITH SOUND)
 # =========================
 def create_video(images, output_file):
     try:
@@ -138,29 +144,40 @@ def create_video(images, output_file):
         clips = [ImageClip(img).set_duration(DURATION) for img in images]
         video = concatenate_videoclips(clips)
 
-        print("🎵 Adding background music...")
+        print("🎵 Adding audio...")
 
-        audio_path = "assets/bg_music.mp3"
+        audio_clips = []
 
-        if os.path.exists(audio_path):
-            try:
-                audio = AudioFileClip(audio_path)
+        # 🎵 Background music
+        if os.path.exists("assets/bg_music.mp3"):
+            bg = AudioFileClip("assets/bg_music.mp3").set_duration(video.duration)
+            audio_clips.append(bg.volumex(0.3))
 
-                # ✅ FIX: no .loop() (this was your bug)
-                audio = audio.set_duration(video.duration)
+        # ⏳ Tick sound
+        if os.path.exists("assets/tick.mp3"):
+            tick = AudioFileClip("assets/tick.mp3")
+            current_time = 0
 
-                video = video.set_audio(audio)
+            for img in images:
+                if "slide_" in img:
+                    audio_clips.append(tick.set_start(current_time).volumex(0.8))
+                current_time += DURATION
 
-            except Exception as e:
-                print(f"⚠️ Audio failed, continuing without sound: {e}")
+        # ✅ Correct sound
+        if os.path.exists("assets/correct.mp3"):
+            correct = AudioFileClip("assets/correct.mp3")
+            current_time = 0
 
-        else:
-            print("⚠️ No background music found, skipping audio")
+            for img in images:
+                if "answer_" in img:
+                    audio_clips.append(correct.set_start(current_time).volumex(1.0))
+                current_time += DURATION
 
-        # ✅ Ensure output dir exists
+        if audio_clips:
+            final_audio = CompositeAudioClip(audio_clips)
+            video = video.set_audio(final_audio)
+
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
-        print("🎥 Rendering final video...")
 
         video.write_videofile(
             output_file,
@@ -169,7 +186,7 @@ def create_video(images, output_file):
             audio_codec="aac"
         )
 
-        print("✅ Video created successfully!")
+        print("✅ Video created!")
 
     except Exception as e:
         print(f"❌ Error in create_video: {e}")

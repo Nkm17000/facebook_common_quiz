@@ -1,4 +1,4 @@
-def create_html(q, index):
+def create_html(q, index, timer=5):
     question = q["question"]
     options = q["options"]
 
@@ -23,16 +23,9 @@ def create_html(q, index):
         }}
 
         .timer {{
-            font-size: 50px;
+            font-size: 70px;
             color: #ffcc00;
             margin-bottom: 20px;
-            animation: pulse 1s infinite;
-        }}
-
-        @keyframes pulse {{
-            0% {{ opacity: 1; }}
-            50% {{ opacity: 0.5; }}
-            100% {{ opacity: 1; }}
         }}
 
         .question {{
@@ -47,12 +40,19 @@ def create_html(q, index):
             border: 2px solid #00c3ff;
             font-size: 30px;
         }}
+
+        .footer {{
+            margin-top: 40px;
+            font-size: 25px;
+            color: #00ff9d;
+        }}
     </style>
     </head>
 
     <body>
         <div class="container">
-            <div class="timer">⏳ 5</div>
+
+            <div class="timer">⏳ {timer}</div>
 
             <div class="question">
                 Q{index+1}. {question}
@@ -62,6 +62,11 @@ def create_html(q, index):
             <div class="option">B. {options[1]}</div>
             <div class="option">C. {options[2]}</div>
             <div class="option">D. {options[3]}</div>
+
+            <div class="footer">
+                🔥 Comment your answer!
+            </div>
+
         </div>
     </body>
     </html>
