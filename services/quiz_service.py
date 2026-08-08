@@ -2,6 +2,7 @@ import json
 import re
 import requests
 from config import GROQ_API_KEY, GROQ_URL, MODEL
+from promp import prompt
 
 def fetch_quiz():
     headers = {
@@ -9,24 +10,7 @@ def fetch_quiz():
         "Content-Type": "application/json"
     }
 
-    prompt = """
-You are a JSON generator.
-
-Return ONLY valid JSON.
-
-SCHEMA:
-[
-{
-"question": "string",
-"options": ["string", "string", "string", "string"],
-"answer_index": number
-}
-]
-
-RULES:
-- Exactly 20 questions
-- Mix subjects
-"""
+    
 
     payload = {
         "model": MODEL,

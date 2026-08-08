@@ -29,25 +29,46 @@ def generate_images(quiz):
 
 # ✅ ADD THIS FUNCTION
 def generate_answer_slide(quiz):
-    answer_html = "<h1 style='color:white;text-align:center'>Answers</h1>"
+    slides = []
+    answers_per_slide = 10
 
-    for i, q in enumerate(quiz):
-        correct = q["options"][q["answer_index"]]
-        answer_html += f"<p style='color:white;font-size:40px;text-align:center'>Q{i+1}: {correct}</p>"
+    # Split quiz into chunks of 10
+    for i in range(0, len(quiz), answers_per_slide):
+        chunk = quiz[i:i + answers_per_slide]
 
-    final_html = f"<html><body style='background:black'>{answer_html}</body></html>"
+        answer_html = "<h1 style='color:white;text-align:center'>Answers</h1>"
 
-    imgkit.from_string(
-        final_html,
-        "answer.png",
-        config=IMGKIT_CONFIG,
-        options={
-            "width": VIDEO_WIDTH,
-            "height": VIDEO_HEIGHT
-        }
-    )
+        for j, q in enumerate(chunk):
+            correct = q["options"][q["answer_index"]]
+            answer_html += f"""
+            <p style='color:white;font-size:40px;text-align:center'>
+            Q{i + j + 1}: {correct}
+            </p>
+            """
 
-    return "answer.png"
+        final_html = f"""
+        <html>
+        <body style='background:black'>
+        {answer_html}
+        </body>
+        </html>
+        """
+
+        file_name = f"answer_{i//answers_per_slide + 1}.png"
+
+        imgkit.from_string(
+            final_html,
+            file_name,
+            config=IMGKIT_CONFIG,
+            options={
+                "width": VIDEO_WIDTH,
+                "height": VIDEO_HEIGHT
+            }
+        )
+
+        slides.append(file_name)
+
+    return slides
 
 
 
