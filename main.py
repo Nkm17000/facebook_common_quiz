@@ -2,6 +2,7 @@ from services.quiz_service import fetch_quiz
 from services.video_service import generate_images, generate_answer_slide, create_video
 from utils.file_utils import cleanup
 from config import OUTPUT_VIDEO
+from services.facebook_service import upload_video_to_facebook
 
 def main():
     print("📥 Fetching quiz...")
@@ -16,6 +17,9 @@ def main():
 
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)
+    
+    # ✅ NEW STEP
+    upload_video_to_facebook(OUTPUT_VIDEO)
 
     print("🧹 Cleaning up...")
     cleanup(images)

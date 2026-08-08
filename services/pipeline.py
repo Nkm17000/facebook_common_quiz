@@ -3,6 +3,7 @@ from services.video_service import generate_images, generate_answer_slide, creat
 from utils.file_utils import cleanup
 from config import OUTPUT_VIDEO
 from config import OUTPUT_DIR
+from services.facebook_service import upload_video_to_facebook
 import os
 def run_pipeline():
     print("create output dir")
@@ -19,6 +20,13 @@ def run_pipeline():
 
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)
+
+    print("📤 Uploading to Facebook...")
+
+    upload_video_to_facebook(
+        OUTPUT_VIDEO,
+        caption="🧠 Daily Quiz | SSC UPSC Bank Railway | Comment your score 👇 #quiz #ssc #upsc"
+    )
 
     print("🧹 Cleaning up...")
     cleanup(images)
