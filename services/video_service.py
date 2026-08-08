@@ -7,6 +7,7 @@ from moviepy.editor import (
     AudioFileClip,
     CompositeAudioClip
 )
+from moviepy.audio.fx.all import audio_loop   # 🔥 add at top
 from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 
 
@@ -152,7 +153,11 @@ def create_video(images, output_file):
 
         # 🎵 Background music
         if os.path.exists("assets/bg_music.mp3"):
-            bg = AudioFileClip("assets/bg_music.mp3").set_duration(video.duration)
+            bg = AudioFileClip("assets/bg_music.mp3")
+
+            # ✅ LOOP AUDIO TO MATCH VIDEO (FIX)
+            bg = audio_loop(bg, duration=video.duration)
+
             audio_clips.append(bg.volumex(0.3))
 
         # ⏳ Tick sound
@@ -176,7 +181,7 @@ def create_video(images, output_file):
                 current_time += DURATION
 
         if audio_clips:
-            final_audio = CompositeAudioClip(audio_clips)
+            final_audio = CompositeAudioClip(audio_clips).set_duration(video.duration)
             video = video.set_audio(final_audio)
 
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
