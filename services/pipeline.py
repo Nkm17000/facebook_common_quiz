@@ -1,9 +1,9 @@
-from services.quiz_service import fetch_quiz
-from services.video_service import generate_images, generate_answer_slide, create_video
-from utils.file_utils import cleanup
-from config import OUTPUT_VIDEO
+def run_pipeline():
+    from services.quiz_service import fetch_quiz
+    from services.video_service import generate_images, generate_answer_slide, create_video
+    from utils.file_utils import cleanup
+    from config import OUTPUT_VIDEO
 
-def main():
     print("📥 Fetching quiz...")
     quiz = fetch_quiz()
 
@@ -21,7 +21,3 @@ def main():
     cleanup(images)
 
     print("✅ Done!")
-
-
-if __name__ == "__main__":
-    main()

@@ -5,3 +5,6 @@ imageio-ffmpeg
 numpy
 Pillow
 requests
+fastapi
+uvicorn
+python-dotenv

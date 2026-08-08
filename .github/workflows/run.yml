@@ -42,7 +42,7 @@ jobs:
 
     # ✅ Run your script (WITH SECRET)
     - name: Run Quiz Generator
-      run: python main.py
+      run: python app.py
       env:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
