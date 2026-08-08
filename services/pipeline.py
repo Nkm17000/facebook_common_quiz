@@ -11,9 +11,9 @@ def run_pipeline():
     print("📥 Fetching quiz...")
     quiz, is_fallback = fetch_quiz()
 
-    if is_fallback:
+    """if is_fallback:
         print("🚫 Fallback detected → stopping pipeline")
-        return
+        return"""
 
     print("🖼️ Generating images...")
     images = generate_images(quiz)
