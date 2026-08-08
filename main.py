@@ -39,7 +39,7 @@ SCHEMA:
 ]
 
 RULES:
-- Exactly 5 questions
+- Exactly 20 questions
 - Each question must have 4 options
 - answer_index must match correct option
 - Mix subjects: English, GK, CS, Reasoning, Science, Math
