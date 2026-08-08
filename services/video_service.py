@@ -195,5 +195,16 @@ def create_video(images, output_file):
         
 
 def get_logo_base64():
-    with open("assets/logo.png", "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")        
+    # ✅ Get current file directory (html_generator.py OR video_service.py)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # ✅ Go to project root → then assets
+    logo_path = os.path.join(current_dir, "..", "assets", "logo.png")
+
+    # ✅ Normalize path
+    logo_path = os.path.abspath(logo_path)
+
+    print("📍 Logo path:", logo_path)  # debug (very useful)
+
+    with open(logo_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")     
