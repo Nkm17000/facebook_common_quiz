@@ -1,75 +1,66 @@
 def create_html(q, index):
-    labels = ["A", "B", "C", "D"]
-
-    options_html = ""
-    for i, opt in enumerate(q["options"]):
-        options_html += f"""
-        <div class="option">
-            <b>{labels[i]}.</b> {opt}
-        </div>
-        """
+    question = q["question"]
+    options = q["options"]
 
     return f"""
     <html>
     <head>
-    <meta charset="UTF-8">
-
-    <!-- ✅ Hindi Font Fix -->
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap');
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle at top, #0b2a3c, #020d18);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }}
 
-    body {{
-        font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif;
-        background: black;
-        color: white;
-        margin: 0;
-        padding: 40px;
-    }}
+        .container {{
+            width: 90%;
+            text-align: center;
+        }}
 
-    .container {{
-        width: 100%;
-        height: 100%;
-    }}
+        .question-box {{
+            border: 2px solid #00c3ff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 0 20px #00c3ff;
+            font-size: 40px;
+            font-weight: bold;
+        }}
 
-    .question {{
-        font-size: 60px;
-        font-weight: bold;
-        margin-bottom: 40px;
-        line-height: 1.3;
-    }}
+        .options {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }}
 
-    .option {{
-        font-size: 45px;
-        margin: 15px 0;
-        padding: 10px 20px;
-        border-radius: 10px;
-        background: #1e1e1e;
-    }}
-
-    .footer {{
-        position: absolute;
-        bottom: 20px;
-        right: 40px;
-        font-size: 30px;
-        color: gray;
-    }}
+        .option {{
+            border: 2px solid #00c3ff;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 28px;
+            box-shadow: 0 0 10px #00c3ff;
+        }}
     </style>
-
     </head>
 
     <body>
         <div class="container">
-
-            <div class="question">
-                Q{index + 1}. {q["question"]}
+            <div class="question-box">
+                Q{index+1}. {question}
             </div>
 
-            {options_html}
-
-            <div class="footer">
-                #Quiz #SSC #UPSC
+            <div class="options">
+                <div class="option">A. {options[0]}</div>
+                <div class="option">B. {options[1]}</div>
+                <div class="option">C. {options[2]}</div>
+                <div class="option">D. {options[3]}</div>
             </div>
-
         </div>
     </body>
     </html>

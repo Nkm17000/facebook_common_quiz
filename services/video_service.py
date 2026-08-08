@@ -3,6 +3,7 @@ from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 import os
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 from config import DURATION
+from services.answer_html import answer_format
 
 """def generate_images(quiz):
     from utils.html_generator import create_html
@@ -55,17 +56,8 @@ def generate_images(quiz):
         # ✅ ANSWER SLIDE (NEW)
         # =========================
         correct = q["options"][q["answer_index"]]
-
-        answer_html = f"""
-        <html>
-        <body style='background:black; display:flex; justify-content:center; align-items:center; height:100vh;'>
-            <div style='text-align:center;'>
-                <h1 style='color:white;'>Answer</h1>
-                <p style='color:yellow; font-size:50px;'>Q{i+1}: {correct}</p>
-            </div>
-        </body>
-        </html>
-        """
+        answer_html= answer_format(i+1,correct)
+       
 
         a_file = f"slide_a_{i}.png"
 
