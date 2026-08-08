@@ -12,9 +12,13 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # 🎥 Video Config
-VIDEO_WIDTH = int(os.getenv("VIDEO_WIDTH", 1920))
+"""VIDEO_WIDTH = int(os.getenv("VIDEO_WIDTH", 1920))
 VIDEO_HEIGHT = int(os.getenv("VIDEO_HEIGHT", 1080))
-DURATION = int(os.getenv("VIDEO_DURATION", 3))
+DURATION = int(os.getenv("VIDEO_DURATION", 3))"""
+
+VIDEO_WIDTH = 1080
+VIDEO_HEIGHT = 1920   # 🔥 vertical reels
+DURATION = 4    
 
 MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
 

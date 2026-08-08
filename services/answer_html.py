@@ -1,43 +1,64 @@
-def answer_format(page, correct):
+def answer_format(page, correct, correct_index, options):
+    highlighted = []
+
+    for i, opt in enumerate(options):
+        if i == correct_index:
+            highlighted.append(
+                f"<div class='option correct'>✔ {opt}</div>"
+            )
+        else:
+            highlighted.append(
+                f"<div class='option'>{opt}</div>"
+            )
+
+    options_html = "".join(highlighted)
+
     return f"""
     <html>
     <head>
     <style>
         body {{
             margin: 0;
-            background: radial-gradient(circle at top, #0b2a3c, #020d18);
+            font-family: Arial;
+            height: 100vh;
+            background: linear-gradient(180deg, #020d18, #0a2a43);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-        }}
-
-        .box {{
-            border: 3px solid #00ff9d;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 0 25px #00ff9d;
-            text-align: center;
             color: white;
         }}
 
-        .title {{
-            font-size: 40px;
-            margin-bottom: 20px;
+        .container {{
+            width: 90%;
+            text-align: center;
         }}
 
-        .answer {{
+        .title {{
             font-size: 50px;
-            color: #00ff9d;
+            margin-bottom: 30px;
+        }}
+
+        .option {{
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #00c3ff;
+            font-size: 30px;
+        }}
+
+        .correct {{
+            background: #00ff9d;
+            color: black;
+            box-shadow: 0 0 25px #00ff9d;
+            font-weight: bold;
         }}
     </style>
     </head>
 
     <body>
-        <div class="box">
-            <div class="title">Correct Answer</div>
-            <div class="answer">Q{page}: {correct}</div>
+        <div class="container">
+            <div class="title">✅ Answer</div>
+            {options_html}
         </div>
     </body>
     </html>

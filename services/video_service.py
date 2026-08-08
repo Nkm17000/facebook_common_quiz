@@ -56,7 +56,7 @@ def generate_images(quiz):
         # ✅ ANSWER SLIDE (NEW)
         # =========================
         correct = q["options"][q["answer_index"]]
-        answer_html= answer_format(i+1,correct)
+        answer_html= answer_format(i+1, correct, q["answer_index"], q["options"])
        
 
         a_file = f"slide_a_{i}.png"
