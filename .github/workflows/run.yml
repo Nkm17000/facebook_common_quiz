@@ -22,7 +22,9 @@ jobs:
 
     - name: Fix wkhtmltoimage
       run: |
-        sudo ln -s /usr/bin/wkhtmltopdf /usr/bin/wkhtmltoimage
+        if [ ! -f /usr/bin/wkhtmltoimage ]; then
+          sudo ln -s /usr/bin/wkhtmltopdf /usr/bin/wkhtmltoimage
+        fi
 
     - name: Run script
       run: python main.py
