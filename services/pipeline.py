@@ -15,7 +15,7 @@ def run_pipeline():
 
     print("📊 Adding answer slide...")
     answer_img = generate_answer_slide(quiz)
-    images.append(answer_img)
+    images.extend(answer_img)
 
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)

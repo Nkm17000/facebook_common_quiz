@@ -178,7 +178,7 @@ def main():
             options={"width": 1920, "height": 1080}
         )
 
-        images.append(file)
+        images.extend(file)
 
     # =========================
     # ANSWER SLIDE
@@ -198,7 +198,7 @@ def main():
         options={"width": 1920, "height": 1080}
     )
 
-    images.append("answer.png")
+    images.extend("answer.png")
 
     print("🎬 Creating video...")
 

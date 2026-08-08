@@ -22,7 +22,7 @@ def generate_images(quiz):
             }
         )
 
-        images.append(file)
+        images.extend(file)
 
     return images
 
