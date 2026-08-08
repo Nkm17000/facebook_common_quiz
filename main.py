@@ -1,12 +1,12 @@
 import os
-import imgkit
-from moviepy.editor import ImageClip, concatenate_videoclips
+from moviepy.editor import TextClip, CompositeVideoClip, concatenate_videoclips, ColorClip
 
 # CONFIG
-OUTPUT_VIDEO = "quiz_video.mp4"
+WIDTH, HEIGHT = 1080, 1920   # Reels/Shorts format
 DURATION = 3
-config = imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')
+OUTPUT_VIDEO = "quiz_video.mp4"
 
+# QUIZ DATA
 quiz = [
     {
         "question": "What is the capital of Japan?",
@@ -20,74 +20,74 @@ quiz = [
     }
 ]
 
-CSS = """
-<style>
-body {
-background: radial-gradient(circle at center, #0A254F, #071A3D);
-color: white;
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
-font-family: Poppins;
-}
-.quiz-card {
-width: 1000px;
-padding: 40px;
-border-radius: 30px;
-border: 2px solid #22D3EE;
-}
-.option {
-padding: 20px;
-margin: 10px;
-border-radius: 40px;
-border: 2px solid #3B82F6;
-}
-</style>
-"""
+# 🎨 COLORS
+BG_COLOR = (7, 26, 61)          # Dark blue
+TEXT_COLOR = "white"
+OPTION_COLOR = "#3B82F6"
+ANSWER_COLOR = "#22D3EE"
 
-def create_html(q, index):
+# 🎬 CREATE QUESTION SLIDE
+def create_question_slide(q, index):
+    bg = ColorClip(size=(WIDTH, HEIGHT), color=BG_COLOR, duration=DURATION)
+
+    # Question
+    question = TextClip(
+        f"Q{index+1}. {q['question']}",
+        fontsize=60,
+        color=TEXT_COLOR,
+        method="caption",
+        size=(900, None)
+    ).set_position(("center", 300)).set_duration(DURATION)
+
+    # Options
+    option_clips = []
     labels = ["A", "B", "C", "D"]
 
-    options_html = ""
     for i, opt in enumerate(q["options"]):
-        options_html += f"<div class='option'>{labels[i]}. {opt}</div>"
+        txt = TextClip(
+            f"{labels[i]}. {opt}",
+            fontsize=45,
+            color="white",
+            method="caption",
+            size=(800, None)
+        ).set_position(("center", 700 + i*150)).set_duration(DURATION)
 
-    return f"""
-    <html>
-    <head>{CSS}</head>
-    <body>
-    <div class="quiz-card">
-        <h2>Q{index+1}. {q['question']}</h2>
-        {options_html}
-    </div>
-    </body>
-    </html>
-    """
+        option_clips.append(txt)
 
-images = []
+    return CompositeVideoClip([bg, question, *option_clips])
 
-# Generate slides
+# 🎬 CREATE ANSWER SLIDE
+def create_answer_slide():
+    bg = ColorClip(size=(WIDTH, HEIGHT), color=BG_COLOR, duration=DURATION)
+
+    title = TextClip(
+        "Answers",
+        fontsize=70,
+        color=ANSWER_COLOR
+    ).set_position(("center", 200)).set_duration(DURATION)
+
+    answers = []
+    for i, q in enumerate(quiz):
+        txt = TextClip(
+            f"Q{i+1}: {q['answer']}",
+            fontsize=50,
+            color="white"
+        ).set_position(("center", 400 + i*120)).set_duration(DURATION)
+
+        answers.append(txt)
+
+    return CompositeVideoClip([bg, title, *answers])
+
+# 🎥 BUILD VIDEO
+clips = []
+
 for i, q in enumerate(quiz):
-    file = f"slide_{i}.png"
-    imgkit.from_string(create_html(q, i), file, config=config)
-    images.append(file)
+    clips.append(create_question_slide(q, i))
 
-# Answer slide
-answer_html = "<h1>Answers</h1>"
-for i, q in enumerate(quiz):
-    answer_html += f"<h3>Q{i+1}: {q['answer']}</h3>"
+clips.append(create_answer_slide())
 
-imgkit.from_string(answer_html, "answer.png", config=config)
-images.append("answer.png")
+final_video = concatenate_videoclips(clips)
 
-# Create video
-clips = [ImageClip(img).set_duration(DURATION) for img in images]
-video = concatenate_videoclips(clips)
-video.write_videofile(OUTPUT_VIDEO, fps=24)
-
-# Cleanup
-for img in images:
-    os.remove(img)
+final_video.write_videofile(OUTPUT_VIDEO, fps=24)
 
 print("✅ Video Created!")

@@ -1,2 +1,5 @@
 moviepy
-imgkit
+imageio
+imageio-ffmpeg
+numpy
+Pillow
