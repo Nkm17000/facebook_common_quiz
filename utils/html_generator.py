@@ -27,9 +27,15 @@ def create_html(q, index, timer=3):
 
     /* 🔥 LOGO */
     .logo {{
-        width: 180px;
-        margin-bottom: 20px;
-        filter: drop-shadow(0 0 15px #00c3ff);
+        width: 260px;              /* 🔥 bigger size */
+        height: 260px;             /* keep equal for perfect circle */
+        border-radius: 50%;        /* 🔥 makes it round */
+        object-fit: cover;         /* avoids distortion */
+        margin-bottom: 25px;        /* 🔥 premium glow */
+        box-shadow: 0 0 25px #00c3ff, 0 0 50px rgba(0,195,255,0.5);
+
+        /* 🔥 optional border */
+        border: 4px solid rgba(255,255,255,0.2);
     }}
 
     .timer {{
