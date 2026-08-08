@@ -30,9 +30,9 @@ def generate_images(quiz):
 # ✅ ADD THIS FUNCTION
 def generate_answer_slide(quiz):
     slides = []
-    answers_per_slide = 10
+    answers_per_slide = 7
 
-    # Split quiz into chunks of 10
+    # Split quiz into chunks of 7
     for i in range(0, len(quiz), answers_per_slide):
         chunk = quiz[i:i + answers_per_slide]
 
