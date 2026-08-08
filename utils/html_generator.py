@@ -1,3 +1,5 @@
+import os
+LOGO_PATH = os.path.abspath("assets/logo.png")
 def create_html(q, index, timer=5):
     question = q["question"]
     options = q["options"]
@@ -20,6 +22,12 @@ def create_html(q, index, timer=5):
         .container {{
             width: 90%;
             text-align: center;
+        }}
+
+        /* 🔥 LOGO */
+        .logo {{
+            width: 180px;
+            margin-bottom: 20px;
         }}
 
         .timer {{
@@ -51,6 +59,10 @@ def create_html(q, index, timer=5):
 
     <body>
         <div class="container">
+
+            <!-- ✅ LOGO -->
+            
+            <img src="file:///{LOGO_PATH}" class="logo"/>
 
             <div class="timer">⏳ {timer}</div>
 

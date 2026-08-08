@@ -1,15 +1,13 @@
-def answer_format(page, correct, correct_index, options):
+import os
+LOGO_PATH = os.path.abspath("assets/logo.png")
+def answer_html(page, correct, correct_index, options):
     highlighted = []
 
     for i, opt in enumerate(options):
         if i == correct_index:
-            highlighted.append(
-                f"<div class='option correct'>✔ {opt}</div>"
-            )
+            highlighted.append(f"<div class='option correct'>✔ {opt}</div>")
         else:
-            highlighted.append(
-                f"<div class='option'>{opt}</div>"
-            )
+            highlighted.append(f"<div class='option'>{opt}</div>")
 
     options_html = "".join(highlighted)
 
@@ -31,6 +29,12 @@ def answer_format(page, correct, correct_index, options):
         .container {{
             width: 90%;
             text-align: center;
+        }}
+
+        /* 🔥 LOGO */
+        .logo {{
+            width: 180px;
+            margin-bottom: 20px;
         }}
 
         .title {{
@@ -57,8 +61,14 @@ def answer_format(page, correct, correct_index, options):
 
     <body>
         <div class="container">
+
+            <!-- ✅ LOGO -->
+            
+            <img src="file:///{LOGO_PATH}" class="logo"/>
+
             <div class="title">✅ Answer</div>
             {options_html}
+
         </div>
     </body>
     </html>
