@@ -10,10 +10,10 @@ def main():
 
     print("🖼️ Generating images...")
     images = generate_images(quiz)
-
+    """
     print("📊 Adding answer slide...")
     answer_img = generate_answer_slide(quiz)
-    images.extend(answer_img)
+    images.extend(answer_img) """
 
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)

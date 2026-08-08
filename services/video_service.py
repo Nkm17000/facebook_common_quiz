@@ -4,7 +4,7 @@ import os
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 from config import DURATION
 
-def generate_images(quiz):
+"""def generate_images(quiz):
     from utils.html_generator import create_html
 
     images = []
@@ -26,7 +26,62 @@ def generate_images(quiz):
         images.append(file)
 
     return images
+"""
+def generate_images(quiz):
+    from utils.html_generator import create_html
 
+    images = []
+
+    for i, q in enumerate(quiz):
+        # =========================
+        # ✅ QUESTION SLIDE
+        # =========================
+        html = create_html(q, i)
+        q_file = f"slide_q_{i}.png"
+
+        imgkit.from_string(
+            html,
+            q_file,
+            config=IMGKIT_CONFIG,
+            options={
+                "width": VIDEO_WIDTH,
+                "height": VIDEO_HEIGHT
+            }
+        )
+
+        images.append(q_file)
+
+        # =========================
+        # ✅ ANSWER SLIDE (NEW)
+        # =========================
+        correct = q["options"][q["answer_index"]]
+
+        answer_html = f"""
+        <html>
+        <body style='background:black; display:flex; justify-content:center; align-items:center; height:100vh;'>
+            <div style='text-align:center;'>
+                <h1 style='color:white;'>Answer</h1>
+                <p style='color:yellow; font-size:50px;'>Q{i+1}: {correct}</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        a_file = f"slide_a_{i}.png"
+
+        imgkit.from_string(
+            answer_html,
+            a_file,
+            config=IMGKIT_CONFIG,
+            options={
+                "width": VIDEO_WIDTH,
+                "height": VIDEO_HEIGHT
+            }
+        )
+
+        images.append(a_file)
+
+    return images
 
 # ✅ ADD THIS FUNCTION
 def generate_answer_slide(quiz):
