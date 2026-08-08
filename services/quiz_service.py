@@ -32,7 +32,7 @@ def fetch_quiz():
         raise Exception("Invalid JSON")
 
     except Exception as e:
-        print(f"❌ Error generating image for Q{i}: {e}")
+        print(f"❌ Error generating image for que: {e}")
         print("⚠️ Using fallback quiz")
         return fallback_quiz()
     
