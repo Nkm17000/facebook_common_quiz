@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import requests
 import imgkit
 from moviepy.editor import ImageClip, concatenate_videoclips
@@ -10,124 +11,119 @@ from moviepy.editor import ImageClip, concatenate_videoclips
 OUTPUT_VIDEO = "quiz_video.mp4"
 DURATION = 3
 
-# wkhtmltoimage config (for GitHub Actions / Linux)
 config = imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')
 
 # =========================
-# FALLBACK QUIZ (SAFE MODE)
-# =========================
-def fallback_quiz():
-    return [
-        {
-            "question": "What is the capital of India?",
-            "options": ["Delhi", "Mumbai", "Chennai", "Kolkata"],
-            "answer": "Delhi"
-        },
-        {
-            "question": "Largest planet in solar system?",
-            "options": ["Earth", "Mars", "Jupiter", "Venus"],
-            "answer": "Jupiter"
-        }
-    ]
-
-# =========================
-# FETCH QUIZ FROM GROQ API
+# FETCH QUIZ (WITH SCHEMA)
 # =========================
 def fetch_quiz():
-    try:
-        API_KEY = os.getenv("GROQ_API_KEY")
+    url = "https://api.groq.com/openai/v1/chat/completions"
 
-        if not API_KEY:
-            print("❌ GROQ_API_KEY missing → using fallback")
-            return fallback_quiz()
+    headers = {
+        "Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}",
+        "Content-Type": "application/json"
+    }
 
-        url = "https://api.groq.com/openai/v1/chat/completions"
+    prompt = """
+You are a JSON generator.
 
-        headers = {
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
-        }
+Return ONLY valid JSON. No explanation.
 
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": """
-Generate 5 quiz questions in JSON format.
-
-Format:
+SCHEMA:
 [
   {
-    "question": "...",
-    "options": ["A", "B", "C", "D"],
-    "answer": "correct option text"
+    "question": "string",
+    "options": ["string", "string", "string", "string"],
+    "answer_index": number (0-3)
   }
 ]
+
+RULES:
+- Exactly 5 questions
+- Each question must have 4 options
+- answer_index must match correct option
+- Mix subjects: English, GK, CS, Reasoning, Science, Math
 """
-                }
-            ]
-        }
 
-        response = requests.post(url, json=payload, headers=headers)
-        result = response.json()
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}]
+    }
 
-        print("DEBUG API RESPONSE:", result)
+    response = requests.post(url, headers=headers, json=payload)
+    result = response.json()
 
-        # ✅ SAFE PARSING
-        if "choices" in result:
-            content = result["choices"][0]["message"]["content"]
+    print("DEBUG API RESPONSE:", result)
 
-            try:
-                quiz = json.loads(content)
-                return quiz
-            except:
-                print("⚠️ JSON parsing failed → fallback used")
-                return fallback_quiz()
+    try:
+        content = result["choices"][0]["message"]["content"]
 
-        else:
-            print("❌ API ERROR:", result)
-            return fallback_quiz()
+        # Extract JSON safely
+        match = re.search(r"\[.*\]", content, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+
+        raise Exception("Invalid JSON")
 
     except Exception as e:
-        print("❌ EXCEPTION:", e)
-        return fallback_quiz()
+        print("⚠️ Fallback quiz used")
+
+        return [
+            {
+                "question": "Capital of India?",
+                "options": ["Delhi", "Mumbai", "Chennai", "Kolkata"],
+                "answer_index": 0
+            },
+            {
+                "question": "2 + 2 = ?",
+                "options": ["3", "4", "5", "6"],
+                "answer_index": 1
+            }
+        ]
 
 # =========================
-# CSS DESIGN (FUTURISTIC UI)
+# CSS DESIGN
 # =========================
 CSS = """
 <style>
 body {
-background: radial-gradient(circle at center, #0A254F, #071A3D);
-color: white;
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
-font-family: Arial;
+  margin: 0;
+  background: radial-gradient(circle at center, #0A254F, #071A3D);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
 }
-
+.quiz-container {
+  width: 1400px;
+}
 .quiz-card {
-width: 1200px;
-padding: 50px;
-border-radius: 30px;
-border: 2px solid #22D3EE;
-text-align: center;
-box-shadow: 0 0 30px rgba(34,211,238,0.3);
+  background: rgba(10, 37, 79, 0.9);
+  border-radius: 30px;
+  padding: 60px;
+  border: 2px solid #22D3EE;
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.3);
 }
-
+.question-text {
+  font-size: 52px;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 50px;
+}
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
 .option {
-padding: 20px;
-margin: 15px;
-border-radius: 40px;
-border: 2px solid #3B82F6;
-font-size: 28px;
-}
-
-h2 {
-font-size: 42px;
-margin-bottom: 30px;
+  padding: 30px;
+  border-radius: 50px;
+  border: 2px solid #3B82F6;
+  font-size: 30px;
+  color: white;
+  text-align: center;
 }
 </style>
 """
@@ -140,55 +136,63 @@ def create_html(q, index):
 
     options_html = ""
     for i, opt in enumerate(q["options"]):
-        options_html += f"<div class='option'>{labels[i]}. {opt}</div>"
+        options_html += f"""
+        <div class="option">
+            <b>{labels[i]}.</b> {opt}
+        </div>
+        """
 
     return f"""
-    <html>
-    <head>{CSS}</head>
-    <body>
-    <div class="quiz-card">
-        <h2>Q{index+1}. {q['question']}</h2>
-        {options_html}
+<html>
+<head>{CSS}</head>
+<body>
+<div class="quiz-container">
+  <div class="quiz-card">
+    <div class="question-text">Q{index+1}. {q['question']}</div>
+    <div class="options">
+      {options_html}
     </div>
-    </body>
-    </html>
-    """
+  </div>
+</div>
+</body>
+</html>
+"""
 
 # =========================
-# MAIN PROCESS
+# MAIN
 # =========================
 def main():
     quiz = fetch_quiz()
-
-    # Safety: if API returns wrong type
-    if not isinstance(quiz, list):
-        quiz = fallback_quiz()
-
     images = []
 
     print("🖼️ Generating slides...")
 
-    # Question slides
     for i, q in enumerate(quiz):
-        filename = f"slide_{i}.png"
+        html = create_html(q, i)
+        file = f"slide_{i}.png"
 
         imgkit.from_string(
-            create_html(q, i),
-            filename,
+            html,
+            file,
             config=config,
             options={"width": 1920, "height": 1080}
         )
 
-        images.append(filename)
+        images.append(file)
 
-    # Answer slide
-    answer_html = "<h1 style='color:white;text-align:center;'>Answers</h1>"
+    # =========================
+    # ANSWER SLIDE
+    # =========================
+    answer_html = "<h1 style='color:white;text-align:center'>Answers</h1>"
 
     for i, q in enumerate(quiz):
-        answer_html += f"<h2 style='color:white;text-align:center;'>Q{i+1}: {q['answer']}</h2>"
+        correct = q["options"][q["answer_index"]]
+        answer_html += f"<p style='color:white;font-size:40px;text-align:center'>Q{i+1}: {correct}</p>"
+
+    final_page = f"<html><body style='background:black'>{answer_html}</body></html>"
 
     imgkit.from_string(
-        answer_html,
+        final_page,
         "answer.png",
         config=config,
         options={"width": 1920, "height": 1080}
@@ -198,19 +202,17 @@ def main():
 
     print("🎬 Creating video...")
 
-    # Create video
     clips = [ImageClip(img).set_duration(DURATION) for img in images]
     video = concatenate_videoclips(clips)
+
     video.write_videofile(OUTPUT_VIDEO, fps=24)
 
     # Cleanup
     for img in images:
         os.remove(img)
 
-    print("✅ Video Created Successfully!")
+    print("✅ Video Created!")
 
-# =========================
-# RUN
 # =========================
 if __name__ == "__main__":
     main()
