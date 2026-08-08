@@ -22,6 +22,7 @@ def fetch_quiz():
     result = response.json()
 
     try:
+        print(result)
         content = result["choices"][0]["message"]["content"]
         match = re.search(r"\[.*\]", content, re.DOTALL)
 
@@ -30,7 +31,8 @@ def fetch_quiz():
 
         raise Exception("Invalid JSON")
 
-    except Exception:
+    except Exception as e:
+        print(f"❌ Error generating image for Q{i}: {e}")
         print("⚠️ Using fallback quiz")
         return fallback_quiz()
     
