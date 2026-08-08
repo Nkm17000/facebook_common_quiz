@@ -34,7 +34,9 @@ def run_pipeline():
 
     upload_video_to_facebook(
         OUTPUT_VIDEO,
-        caption="🧠 Daily Quiz | SSC UPSC Bank Railway | Comment your score 👇 #quiz #ssc #upsc"
+        caption="""📚 Daily Practice Quiz for SSC | UPSC | Bank | Railway
+                👉 Boost your score daily 🚀 Drop your result in comments 👇
+                    #sscpreparation #upsc #bankexam #railwayexam #quiz"""
     )
 
     print("🧹 Cleaning up...")
