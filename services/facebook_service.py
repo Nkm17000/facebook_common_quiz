@@ -5,7 +5,7 @@ def upload_video_to_facebook(video_path, caption="Daily Quiz 🎯"):
 
     if not FACEBOOK_ACCESS_TOKEN:
         raise ValueError("❌ FACEBOOK_ACCESS_TOKEN missing")
-    print(FACEBOOK_ACCESS_TOKEN[::])
+    
 
     url = f"https://graph-video.facebook.com/v19.0/{FACEBOOK_PAGE_ID}/videos"
 
