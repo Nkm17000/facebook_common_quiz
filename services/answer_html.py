@@ -1,29 +1,29 @@
-import os
-LOGO_PATH = os.path.abspath("assets/logo.png")
-def answer_html(page, correct, correct_index, options):
-    highlighted = []
+from services.video_service import get_logo_base64
+def answer_html(q, index):
+    logo_base64 = get_logo_base64()
+    correct = q["options"][q["answer_index"]]
 
-    for i, opt in enumerate(options):
-        if i == correct_index:
-            highlighted.append(f"<div class='option correct'>✔ {opt}</div>")
+    options_html = ""
+    for i, opt in enumerate(q["options"]):
+        if i == q["answer_index"]:
+            options_html += f'<div class="option correct">{chr(65+i)}. {opt}</div>'
         else:
-            highlighted.append(f"<div class='option'>{opt}</div>")
-
-    options_html = "".join(highlighted)
+            options_html += f'<div class="option">{chr(65+i)}. {opt}</div>'
 
     return f"""
     <html>
     <head>
     <style>
         body {{
+            width: 1080px;
+            height: 1920px;
             margin: 0;
             font-family: Arial;
-            height: 100vh;
-            background: linear-gradient(180deg, #020d18, #0a2a43);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: black;
             color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
 
         .container {{
@@ -31,44 +31,42 @@ def answer_html(page, correct, correct_index, options):
             text-align: center;
         }}
 
-        /* 🔥 LOGO */
         .logo {{
-            width: 180px;
+            width: 120px;
             margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px #00c3ff);
         }}
 
-        .title {{
+        .question {{
             font-size: 50px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }}
 
         .option {{
-            margin: 20px 0;
+            font-size: 40px;
+            margin: 15px 0;
             padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #00c3ff;
-            font-size: 30px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
         }}
 
         .correct {{
             background: #00ff9d;
             color: black;
-            box-shadow: 0 0 25px #00ff9d;
-            font-weight: bold;
+            box-shadow: 0 0 20px #00ff9d;
         }}
     </style>
     </head>
 
     <body>
         <div class="container">
+            <img class="logo" src="data:image/png;base64,{logo_base64}" />
 
-            <!-- ✅ LOGO -->
-            
-            <img src="file:///{LOGO_PATH}" class="logo"/>
+            <div class="question">
+                Q{index+1}. {q["question"]}
+            </div>
 
-            <div class="title">✅ Answer</div>
             {options_html}
-
         </div>
     </body>
     </html>

@@ -1,5 +1,6 @@
 import os
 import imgkit
+import base64
 from moviepy.editor import (
     ImageClip,
     concatenate_videoclips,
@@ -191,3 +192,8 @@ def create_video(images, output_file):
 
     except Exception as e:
         print(f"❌ Error in create_video: {e}")
+        
+
+def get_logo_base64():
+    with open("assets/logo.png", "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")        
