@@ -36,7 +36,7 @@ OUTPUT_VIDEO = f"{OUTPUT_DIR}/quiz_video.mp4"
 FACEBOOK_PAGE_ID = os.getenv("FACEBOOK_PAGE_ID")
 FACEBOOK_ACCESS_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN")
 
-# ✅ Optional safety check
+# ✅ Optional safety check 
 if not FACEBOOK_ACCESS_TOKEN:
     print("⚠️ WARNING: FACEBOOK_ACCESS_TOKEN is not set")
 
