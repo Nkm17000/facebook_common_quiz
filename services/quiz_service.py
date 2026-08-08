@@ -48,3 +48,17 @@ RULES:
     except Exception:
         print("⚠️ Using fallback quiz")
         return fallback_quiz()
+    
+def fallback_quiz():
+    return [
+        {
+            "question": "Capital of India?",
+            "options": ["Delhi", "Mumbai", "Chennai", "Kolkata"],
+            "answer_index": 0
+        },
+        {
+            "question": "2 + 2 = ?",
+            "options": ["3", "4", "5", "6"],
+            "answer_index": 1
+        }
+    ]    
