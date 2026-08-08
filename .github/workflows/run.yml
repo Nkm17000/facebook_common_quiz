@@ -1,0 +1,33 @@
+name: Generate Quiz Video
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:        # manual run
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wkhtmltopdf
+        pip install -r requirements.txt
+
+    - name: Fix wkhtmltoimage
+      run: |
+        sudo ln -s /usr/bin/wkhtmltopdf /usr/bin/wkhtmltoimage
+
+    - name: Run script
+      run: python main.py
+
+    - name: Upload video
+      uses: actions/upload-artifact@v4
+      with:
+        name: quiz-video
+        path: quiz_video.mp4
