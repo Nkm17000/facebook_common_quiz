@@ -2,4 +2,3 @@ moviepy
 imageio
 imageio-ffmpeg
 numpy
-Pillow
