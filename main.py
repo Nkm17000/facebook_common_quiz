@@ -1,85 +1,140 @@
 import os
+import json
 import requests
 import imgkit
 from moviepy.editor import ImageClip, concatenate_videoclips
 
-# ================= CONFIG =================
+# =========================
+# CONFIG
+# =========================
 OUTPUT_VIDEO = "quiz_video.mp4"
 DURATION = 3
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")  # set in GitHub secrets
 
+# wkhtmltoimage config (for GitHub Actions / Linux)
 config = imgkit.config(wkhtmltoimage='/usr/bin/wkhtmltoimage')
 
-# ================= GROQ CALL =================
-def fetch_quiz():
-    url = "https://api.groq.com/openai/v1/chat/completions"
-
-    prompt = """
-    Generate 20 multiple choice quiz questions.
-
-    Format strictly as JSON like this:
-    [
-      {
-        "question": "...",
-        "options": ["A", "B", "C", "D"],
-        "answer": "correct option text"
-      }
+# =========================
+# FALLBACK QUIZ (SAFE MODE)
+# =========================
+def fallback_quiz():
+    return [
+        {
+            "question": "What is the capital of India?",
+            "options": ["Delhi", "Mumbai", "Chennai", "Kolkata"],
+            "answer": "Delhi"
+        },
+        {
+            "question": "Largest planet in solar system?",
+            "options": ["Earth", "Mars", "Jupiter", "Venus"],
+            "answer": "Jupiter"
+        }
     ]
 
-    Only return JSON. No explanation.
-    """
+# =========================
+# FETCH QUIZ FROM GROQ API
+# =========================
+def fetch_quiz():
+    try:
+        API_KEY = os.getenv("GROQ_API_KEY")
 
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
+        if not API_KEY:
+            print("❌ GROQ_API_KEY missing → using fallback")
+            return fallback_quiz()
 
-    data = {
-        "model": "llama3-70b-8192",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7
-    }
+        url = "https://api.groq.com/openai/v1/chat/completions"
 
-    response = requests.post(url, headers=headers, json=data)
-    result = response.json()
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        }
 
-    content = result["choices"][0]["message"]["content"]
+        payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": """
+Generate 5 quiz questions in JSON format.
 
-    import json
-    quiz_data = json.loads(content)
+Format:
+[
+  {
+    "question": "...",
+    "options": ["A", "B", "C", "D"],
+    "answer": "correct option text"
+  }
+]
+"""
+                }
+            ]
+        }
 
-    return quiz_data
+        response = requests.post(url, json=payload, headers=headers)
+        result = response.json()
 
+        print("DEBUG API RESPONSE:", result)
 
-# ================= CSS =================
+        # ✅ SAFE PARSING
+        if "choices" in result:
+            content = result["choices"][0]["message"]["content"]
+
+            try:
+                quiz = json.loads(content)
+                return quiz
+            except:
+                print("⚠️ JSON parsing failed → fallback used")
+                return fallback_quiz()
+
+        else:
+            print("❌ API ERROR:", result)
+            return fallback_quiz()
+
+    except Exception as e:
+        print("❌ EXCEPTION:", e)
+        return fallback_quiz()
+
+# =========================
+# CSS DESIGN (FUTURISTIC UI)
+# =========================
 CSS = """
 <style>
 body {
-    background: radial-gradient(circle, #0A254F, #071A3D);
-    font-family: Arial;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+background: radial-gradient(circle at center, #0A254F, #071A3D);
+color: white;
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+font-family: Arial;
 }
+
 .quiz-card {
-    width: 1200px;
-    padding: 40px;
-    border-radius: 20px;
-    border: 2px solid cyan;
+width: 1200px;
+padding: 50px;
+border-radius: 30px;
+border: 2px solid #22D3EE;
+text-align: center;
+box-shadow: 0 0 30px rgba(34,211,238,0.3);
 }
-h2 {
-    font-size: 50px;
-}
+
 .option {
-    font-size: 35px;
-    margin: 10px 0;
+padding: 20px;
+margin: 15px;
+border-radius: 40px;
+border: 2px solid #3B82F6;
+font-size: 28px;
+}
+
+h2 {
+font-size: 42px;
+margin-bottom: 30px;
 }
 </style>
 """
 
-# ================= HTML BUILDER =================
+# =========================
+# HTML GENERATOR
+# =========================
 def create_html(q, index):
     labels = ["A", "B", "C", "D"]
 
@@ -99,53 +154,63 @@ def create_html(q, index):
     </html>
     """
 
+# =========================
+# MAIN PROCESS
+# =========================
+def main():
+    quiz = fetch_quiz()
 
-# ================= MAIN =================
-quiz = fetch_quiz()
+    # Safety: if API returns wrong type
+    if not isinstance(quiz, list):
+        quiz = fallback_quiz()
 
-images = []
+    images = []
 
-# 🎬 Generate question slides
-for i, q in enumerate(quiz):
-    file = f"slide_{i}.png"
+    print("🖼️ Generating slides...")
+
+    # Question slides
+    for i, q in enumerate(quiz):
+        filename = f"slide_{i}.png"
+
+        imgkit.from_string(
+            create_html(q, i),
+            filename,
+            config=config,
+            options={"width": 1920, "height": 1080}
+        )
+
+        images.append(filename)
+
+    # Answer slide
+    answer_html = "<h1 style='color:white;text-align:center;'>Answers</h1>"
+
+    for i, q in enumerate(quiz):
+        answer_html += f"<h2 style='color:white;text-align:center;'>Q{i+1}: {q['answer']}</h2>"
+
     imgkit.from_string(
-        create_html(q, i),
-        file,
+        answer_html,
+        "answer.png",
         config=config,
         options={"width": 1920, "height": 1080}
     )
-    images.append(file)
 
-# ✅ Answer slide
-answer_html = f"""
-<html>
-<head>{CSS}</head>
-<body>
-<div class="quiz-card">
-<h2>Answers</h2>
-"""
+    images.append("answer.png")
 
-for i, q in enumerate(quiz):
-    answer_html += f"<div class='option'>Q{i+1}: {q['answer']}</div>"
+    print("🎬 Creating video...")
 
-answer_html += "</div></body></html>"
+    # Create video
+    clips = [ImageClip(img).set_duration(DURATION) for img in images]
+    video = concatenate_videoclips(clips)
+    video.write_videofile(OUTPUT_VIDEO, fps=24)
 
-imgkit.from_string(
-    answer_html,
-    "answer.png",
-    config=config,
-    options={"width": 1920, "height": 1080}
-)
-images.append("answer.png")
+    # Cleanup
+    for img in images:
+        os.remove(img)
 
-# 🎥 Create video
-clips = [ImageClip(img).set_duration(DURATION) for img in images]
-video = concatenate_videoclips(clips)
+    print("✅ Video Created Successfully!")
 
-video.write_videofile(OUTPUT_VIDEO, fps=24)
-
-# 🧹 Cleanup
-for img in images:
-    os.remove(img)
-
-print("✅ Video Created!")
+# =========================
+# RUN
+# =========================
+if __name__ == "__main__":
+    main()
