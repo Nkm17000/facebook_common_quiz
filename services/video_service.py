@@ -1,44 +1,23 @@
-import imgkit
-from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 import os
+import imgkit
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
-from config import DURATION
-from services.answer_html import answer_format
+from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 
-"""def generate_images(quiz):
-    from utils.html_generator import create_html
 
-    images = []
-
-    for i, q in enumerate(quiz):
-        html = create_html(q, i)
-        file = f"slide_{i}.png"
-
-        imgkit.from_string(
-            html,
-            file,
-            config=IMGKIT_CONFIG,
-            options={
-                "width": VIDEO_WIDTH,
-                "height": VIDEO_HEIGHT
-            }
-        )
-
-        images.append(file)
-
-    return images
-"""
+# =========================
+# GENERATE QUESTION + ANSWER IMAGES (ALTERNATE FLOW)
+# =========================
 def generate_images(quiz):
     from utils.html_generator import create_html
+    from services.video_service import answer_html
 
     images = []
 
     for i, q in enumerate(quiz):
-        # =========================
+
         # ✅ QUESTION SLIDE
-        # =========================
         html = create_html(q, i)
-        q_file = f"slide_q_{i}.png"
+        q_file = f"slide_{i}.png"
 
         imgkit.from_string(
             html,
@@ -52,17 +31,20 @@ def generate_images(quiz):
 
         images.append(q_file)
 
-        # =========================
-        # ✅ ANSWER SLIDE (NEW)
-        # =========================
+        # ✅ ANSWER SLIDE (IMMEDIATELY AFTER QUESTION)
         correct = q["options"][q["answer_index"]]
-        answer_html= answer_format(i+1, correct, q["answer_index"], q["options"])
-       
 
-        a_file = f"slide_a_{i}.png"
+        ans_html = answer_html(
+            i + 1,
+            correct,
+            q["answer_index"],
+            q["options"]
+        )
+
+        a_file = f"answer_{i}.png"
 
         imgkit.from_string(
-            answer_html,
+            ans_html,
             a_file,
             config=IMGKIT_CONFIG,
             options={
@@ -75,103 +57,119 @@ def generate_images(quiz):
 
     return images
 
-# ✅ ADD THIS FUNCTION
-def generate_answer_slide(quiz):
-    slides = []
-    answers_per_slide = 7
 
-    # Split quiz into chunks of 7
-    for i in range(0, len(quiz), answers_per_slide):
-        chunk = quiz[i:i + answers_per_slide]
+# =========================
+# ANSWER HTML (GREEN HIGHLIGHT)
+# =========================
+def answer_html(page, correct, correct_index, options):
+    highlighted = []
 
-        answer_html = "<h1 style='color:white;text-align:center'>Answers</h1>"
+    for i, opt in enumerate(options):
+        if i == correct_index:
+            highlighted.append(
+                f"<div class='option correct'>✔ {opt}</div>"
+            )
+        else:
+            highlighted.append(
+                f"<div class='option'>{opt}</div>"
+            )
 
-        for j, q in enumerate(chunk):
-            correct = q["options"][q["answer_index"]]
-            answer_html += f"""
-            <p style='color:white;font-size:40px;text-align:center'>
-            Q{i + j + 1}: {correct}
-            </p>
-            """
+    options_html = "".join(highlighted)
 
-        final_html = f"""
-        <html>
-        <body style='background:black'>
-        {answer_html}
-        </body>
-        </html>
-        """
+    return f"""
+    <html>
+    <head>
+    <style>
+        body {{
+            margin: 0;
+            font-family: Arial;
+            height: 100vh;
+            background: linear-gradient(180deg, #020d18, #0a2a43);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }}
 
-        file_name = f"answer_{i//answers_per_slide + 1}.png"
+        .container {{
+            width: 90%;
+            text-align: center;
+        }}
 
-        imgkit.from_string(
-            final_html,
-            file_name,
-            config=IMGKIT_CONFIG,
-            options={
-                "width": VIDEO_WIDTH,
-                "height": VIDEO_HEIGHT
-            }
-        )
+        .title {{
+            font-size: 50px;
+            margin-bottom: 30px;
+        }}
 
-        slides.append(file_name)
+        .option {{
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #00c3ff;
+            font-size: 30px;
+        }}
 
-    return slides
+        .correct {{
+            background: #00ff9d;
+            color: black;
+            box-shadow: 0 0 25px #00ff9d;
+            font-weight: bold;
+        }}
+    </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="title">✅ Answer</div>
+            {options_html}
+        </div>
+    </body>
+    </html>
+    """
 
 
-
-    
-"""def create_video(images, output_file):
-    # ✅ Ensure output directory exists
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
-    from moviepy.editor import ImageClip, concatenate_videoclips
-    from config import DURATION
-
-    clips = [ImageClip(img).set_duration(DURATION) for img in images]
-    video = concatenate_videoclips(clips)
-
-    video.write_videofile(output_file, fps=24)    """
-
+# =========================
+# CREATE VIDEO (WITH SAFE AUDIO)
+# =========================
 def create_video(images, output_file):
     try:
-        # ✅ Ensure output directory exists
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
         print("🎬 Creating video clips...")
-        clips = [ImageClip(img).set_duration(DURATION) for img in images]
 
+        clips = [ImageClip(img).set_duration(DURATION) for img in images]
         video = concatenate_videoclips(clips)
 
-        # =========================
-        # 🎵 ADD BACKGROUND MUSIC
-        # =========================
-        music_path = "assets/bg_music.mp3"
+        print("🎵 Adding background music...")
 
-        if os.path.exists(music_path):
-            print("🎵 Adding background music...")
+        audio_path = "assets/bg_music.mp3"
 
-            audio = AudioFileClip(music_path)
+        if os.path.exists(audio_path):
+            try:
+                audio = AudioFileClip(audio_path)
 
-            # 🔁 Loop audio if shorter than video
-            if audio.duration < video.duration:
-                audio = audio.loop(duration=video.duration)
-            else:
-                audio = audio.subclip(0, video.duration)
+                # ✅ FIX: no .loop() (this was your bug)
+                audio = audio.set_duration(video.duration)
 
-            # 🔉 Reduce volume (important)
-            audio = audio.volumex(0.2)
+                video = video.set_audio(audio)
 
-            video = video.set_audio(audio)
+            except Exception as e:
+                print(f"⚠️ Audio failed, continuing without sound: {e}")
 
         else:
-            print("⚠️ Background music not found")
+            print("⚠️ No background music found, skipping audio")
 
-        # =========================
-        # 🎥 EXPORT VIDEO
-        # =========================
-        print("📤 Rendering final video...")
-        video.write_videofile(output_file, fps=24)
+        # ✅ Ensure output dir exists
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+        print("🎥 Rendering final video...")
+
+        video.write_videofile(
+            output_file,
+            fps=24,
+            codec="libx264",
+            audio_codec="aac"
+        )
+
+        print("✅ Video created successfully!")
 
     except Exception as e:
-        print("❌ Error in create_video:", e)    
+        print(f"❌ Error in create_video: {e}")

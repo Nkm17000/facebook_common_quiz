@@ -24,6 +24,10 @@ def run_pipeline():
 
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)
+    
+    if not os.path.exists(OUTPUT_VIDEO):
+        print("❌ Video not created. Skipping Facebook upload.")
+        return
 
     print("📤 Uploading to Facebook...")
 
