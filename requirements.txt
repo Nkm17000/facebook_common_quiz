@@ -1,4 +1,6 @@
-moviepy
+moviepy==1.0.3
+imgkit
 imageio
 imageio-ffmpeg
 numpy
+Pillow

@@ -14,37 +14,29 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # 🐍 Setup Python
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-
-    # 🎬 Install system dependencies
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y ffmpeg imagemagick
+        sudo apt-get install -y wkhtmltopdf ffmpeg
 
-    # 🔧 Fix ImageMagick policy (VERY IMPORTANT for MoviePy TextClip)
-    - name: Fix ImageMagick policy
+    - name: Fix wkhtmltoimage (safe)
       run: |
-        sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml || true
-        sudo sed -i 's/rights="none" pattern="LABEL"/rights="read|write" pattern="LABEL"/' /etc/ImageMagick-6/policy.xml || true
+        if [ ! -f /usr/bin/wkhtmltoimage ]; then
+          sudo ln -s /usr/bin/wkhtmltopdf /usr/bin/wkhtmltoimage
+        fi
 
-    # 📦 Install Python dependencies
     - name: Install Python dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y wkhtmltopdf ffmpeg
-        pip install --upgrade pip
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # ▶️ Run your script
+    - name: Debug installed packages
+      run: |
+        pip list
+
     - name: Run script
       run: python main.py
 
-    # 📤 Upload generated video
     - name: Upload video
       uses: actions/upload-artifact@v4
       with:
