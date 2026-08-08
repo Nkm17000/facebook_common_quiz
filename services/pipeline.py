@@ -9,7 +9,11 @@ def run_pipeline():
     print("create output dir")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     print("📥 Fetching quiz...")
-    quiz = fetch_quiz()
+    quiz, is_fallback = fetch_quiz()
+
+    if is_fallback:
+        print("🚫 Fallback detected → stopping pipeline")
+        return
 
     print("🖼️ Generating images...")
     images = generate_images(quiz)
