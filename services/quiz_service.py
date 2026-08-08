@@ -2,7 +2,8 @@ import json
 import re
 import requests
 from config import GROQ_API_KEY, GROQ_URL, MODEL
-from promp import prompt
+from services.prompt import prompt
+
 
 def fetch_quiz():
     headers = {
