@@ -18,7 +18,7 @@ DURATION = int(os.getenv("VIDEO_DURATION", 3))"""
 
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920   # 🔥 vertical reels
-DURATION = 4    
+DURATION = 3    
 
 MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
 

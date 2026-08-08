@@ -23,7 +23,7 @@ def generate_images(quiz):
     for i, q in enumerate(quiz):
 
         # 🔥 COUNTDOWN 5 → 1
-        for t in range(5, 0, -1):
+        for t in range(3, 0, -1):
             html = create_html(q, i, timer=t)
             file = f"slide_{i}_{t}.png"
 
