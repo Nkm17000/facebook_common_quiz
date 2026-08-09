@@ -52,7 +52,7 @@ def run_pipeline():
 
     upload_video_to_facebook(
         OUTPUT_VIDEO,
-        caption="""📊 Exam Focus Caption
+        caption="""📊Math Exam Focus Caption
 
 📚 Daily practice for serious aspirants
 
