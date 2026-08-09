@@ -7,22 +7,34 @@ from moviepy.editor import (
     AudioFileClip,
     CompositeAudioClip
 )
-from moviepy.audio.fx.all import audio_loop   # 🔥 add at top
+from moviepy.audio.fx.all import audio_loop
+
 from config import IMGKIT_CONFIG, VIDEO_WIDTH, VIDEO_HEIGHT, DURATION
 
 
 # =========================
 # GENERATE IMAGES (WITH COUNTDOWN)
 # =========================
+
 def generate_images(quiz):
-    from utils.html_generator import create_html
-    from services.video_service import answer_html
+    from services.html_generator import create_html
+    from services.answer_html import answer_html   # ✅ FIXED (no circular import)
 
     images = []
 
     for i, q in enumerate(quiz):
 
-        # 🔥 COUNTDOWN 5 → 1
+        # =========================
+        # ✅ HANDLE BILINGUAL DATA
+        # =========================
+        q["question"] = f'{q["question"]["en"]}<br><span style="font-size:30px">{q["question"]["hi"]}</span>'
+
+        q["options"] = [
+            f'{opt["en"]}<br><span style="font-size:22px">{opt["hi"]}</span>'
+            for opt in q["options"]
+        ]
+
+        # 🔥 COUNTDOWN 3 → 1
         for t in range(3, 0, -1):
             html = create_html(q, i, timer=t)
             file = f"slide_{i}_{t}.png"
@@ -40,15 +52,10 @@ def generate_images(quiz):
 
             images.append(file)
 
-        # ✅ ANSWER SLIDE
-        correct = q["options"][q["answer_index"]]
-
-        ans_html = answer_html(
-            i + 1,
-            correct,
-            q["answer_index"],
-            q["options"]
-        )
+        # =========================
+        # ✅ ANSWER SLIDE (FIXED CALL)
+        # =========================
+        ans_html = answer_html(q, i)
 
         ans_file = f"answer_{i}.png"
 
@@ -58,7 +65,8 @@ def generate_images(quiz):
             config=IMGKIT_CONFIG,
             options={
                 "width": VIDEO_WIDTH,
-                "height": VIDEO_HEIGHT
+                "height": VIDEO_HEIGHT,
+                "enable-local-file-access": ""   # ✅ FIXED
             }
         )
 
@@ -68,78 +76,9 @@ def generate_images(quiz):
 
 
 # =========================
-# ANSWER HTML
-# =========================
-def answer_html(page, correct, correct_index, options):
-    highlighted = []
-
-    for i, opt in enumerate(options):
-        if i == correct_index:
-            highlighted.append(
-                f"<div class='option correct'>✔ {opt}</div>"
-            )
-        else:
-            highlighted.append(
-                f"<div class='option'>{opt}</div>"
-            )
-
-    options_html = "".join(highlighted)
-
-    return f"""
-    <html>
-    <head>
-    <style>
-        body {{
-            margin: 0;
-            font-family: Arial;
-            height: 100vh;
-            background: linear-gradient(180deg, #020d18, #0a2a43);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-        }}
-
-        .container {{
-            width: 90%;
-            text-align: center;
-        }}
-
-        .title {{
-            font-size: 50px;
-            margin-bottom: 30px;
-        }}
-
-        .option {{
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #00c3ff;
-            font-size: 30px;
-        }}
-
-        .correct {{
-            background: #00ff9d;
-            color: black;
-            box-shadow: 0 0 25px #00ff9d;
-            font-weight: bold;
-        }}
-    </style>
-    </head>
-
-    <body>
-        <div class="container">
-            <div class="title">✅ Answer</div>
-            {options_html}
-        </div>
-    </body>
-    </html>
-    """
-
-
-# =========================
 # CREATE VIDEO (WITH SOUND)
 # =========================
+
 def create_video(images, output_file):
     try:
         print("🎬 Creating video clips...")
@@ -154,10 +93,7 @@ def create_video(images, output_file):
         # 🎵 Background music
         if os.path.exists("assets/bg_music.mp3"):
             bg = AudioFileClip("assets/bg_music.mp3")
-
-            # ✅ LOOP AUDIO TO MATCH VIDEO (FIX)
             bg = audio_loop(bg, duration=video.duration)
-
             audio_clips.append(bg.volumex(0.3))
 
         # ⏳ Tick sound
@@ -170,7 +106,7 @@ def create_video(images, output_file):
                     audio_clips.append(tick.set_start(current_time).volumex(0.8))
                 current_time += DURATION
 
-        # ✅ Correct sound
+        # ✅ Correct answer sound
         if os.path.exists("assets/correct.mp3"):
             correct = AudioFileClip("assets/correct.mp3")
             current_time = 0
@@ -180,6 +116,7 @@ def create_video(images, output_file):
                     audio_clips.append(correct.set_start(current_time).volumex(1.0))
                 current_time += DURATION
 
+        # 🎧 Merge audio
         if audio_clips:
             final_audio = CompositeAudioClip(audio_clips).set_duration(video.duration)
             video = video.set_audio(final_audio)
@@ -195,21 +132,24 @@ def create_video(images, output_file):
 
         print("✅ Video created!")
 
+        # ✅ MEMORY CLEANUP (IMPORTANT FOR GITHUB)
+        video.close()
+        for clip in clips:
+            clip.close()
+
     except Exception as e:
         print(f"❌ Error in create_video: {e}")
-        
+
+
+# =========================
+# LOGO BASE64
+# =========================
 
 def get_logo_base64():
-    # ✅ Get current file directory (html_generator.py OR video_service.py)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # ✅ FIX: GitHub safe path
+    logo_path = os.path.join(os.getcwd(), "assets", "logo.png")
 
-    # ✅ Go to project root → then assets
-    logo_path = os.path.join(current_dir, "..", "assets", "logo.png")
-
-    # ✅ Normalize path
-    logo_path = os.path.abspath(logo_path)
-
-    print("📍 Logo path:", logo_path)  # debug (very useful)
+    print("📍 Logo path:", logo_path)
 
     with open(logo_path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")     
+        return base64.b64encode(f.read()).decode("utf-8")
