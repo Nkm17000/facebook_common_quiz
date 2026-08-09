@@ -55,7 +55,7 @@ Previous questions:
     }
 
     try:
-        print(payload)
+        
         response = requests.post(GROQ_URL, headers=headers, json=payload)
         result = response.json()
 
