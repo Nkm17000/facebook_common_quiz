@@ -1,62 +1,56 @@
 prompt = """
-You are an expert competitive exam question setter for SSC, UPSC, Banking (PO/Clerk), and Railway exams.
+You are an expert viral quiz creator for SSC, UPSC, Banking, and Railway exams.
 
-Generate a HIGH-QUALITY mixed-subject quiz in STRICT JSON format.
-
-Return ONLY valid JSON. No explanation, no extra text.
+Generate a HIGH-ENGAGEMENT mixed-subject quiz in STRICT JSON format.
+Return ONLY valid JSON (no explanation, no extra text).
 
 SCHEMA:
 [
-  {
-    "question": "English question / हिंदी प्रश्न",
-    "options": [
-      "Option A / विकल्प A",
-      "Option B / विकल्प B",
-      "Option C / विकल्प C",
-      "Option D / विकल्प D"
-    ],
-    "answer_index": number
-  }
+{
+"question": "English / हिंदी",
+"options": [
+"A / विकल्प A",
+"B / विकल्प B",
+"C / विकल्प C",
+"D / विकल्प D"
+],
+"answer_index": 0-3
+}
 ]
 
-RULES:
+REQUIREMENTS:
 
-- Generate EXACTLY 20 questions
-- Each question must be bilingual (English + Hindi)
-- Each option must also be bilingual (English + Hindi)
-- answer_index must be 0, 1, 2, or 3
+* Generate EXACTLY 20 questions
+* All questions and options must be bilingual (English + Hindi)
+* answer_index must be 0, 1, 2, or 3
 
-- Difficulty Level:
-  Match SSC, UPSC Prelims, Bank PO, and Railway exams
-  (Conceptual + tricky + elimination-based questions)
+DISTRIBUTION:
 
-- Mix subjects across:
-  • Mathematics (Arithmetic, DI, Algebra, Simplification)
-  • General Knowledge (India + World, Static GK, Polity, History, Geography)
-  • General Science (Physics, Chemistry, Biology)
-  • English (Grammar, Vocabulary, Error Detection, Fill in the blanks)
-  • Reasoning (Logical, Series, Coding-Decoding, Puzzles)
-  • Computer Science (Basic IT, MS Office, Internet, AI basics)
+* 4 Mathematics
+* 3 GK
+* 3 Science
+* 3 English
+* 3 Reasoning
+* 2 Computer
+* 2 Mixed
 
-- Ensure balanced distribution:
-  • 4 Math
-  • 3 GK
-  • 3 Science
-  • 3 English
-  • 3 Reasoning
-  • 2 Computer
-  • Remaining 2 from any category
+ENGAGEMENT RULES:
 
-- Questions must be:
-  ✔ Short and clear
-  ✔ Concept-based (not too direct)
-  ✔ Non-repetitive
-  ✔ Factually correct
-  ✔ Useful for real exam preparation
+* Start with 2 EASY questions (hook users)
+* Gradually increase difficulty (easy → medium → tricky)
+* Include 3 elimination-based/tricky questions
+* Include 2 surprising or lesser-known facts
 
-- Avoid very easy or very obscure questions
+
+CONTENT STYLE:
+
+* Short, crisp, scroll-stopping questions
+* Concept-based and exam-relevant
+* Not too basic, not too obscure
+* Ensure factual accuracy
+
 
 OUTPUT:
-Return ONLY the JSON array with 20 bilingual competitive-level questions.
+Return ONLY the JSON array with 20 questions.
 
 """

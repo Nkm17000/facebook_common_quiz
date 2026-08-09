@@ -3,6 +3,14 @@ import re
 import requests
 from config import GROQ_API_KEY, GROQ_URL, MODEL
 from services.prompt import prompt
+from utils.memory import load_memory, save_memory, is_duplicate, add_to_memory
+
+
+def clean_question(q):
+    # remove numbering like "1. ", "2) "
+    q = re.sub(r"^\d+[\).\s]*", "", q)
+    return q.strip().lower()
+
 
 def fetch_quiz():
     headers = {
@@ -10,9 +18,28 @@ def fetch_quiz():
         "Content-Type": "application/json"
     }
 
+    # =========================
+    # 🧠 LOAD MEMORY BEFORE API
+    # =========================
+    memory = load_memory()
+    history_text = "\n".join(memory["questions"][-20:])
+
     payload = {
         "model": MODEL,
-        "messages": [{"role": "user", "content": prompt}]
+        "messages": [{
+            "role": "user",
+            "content": f"""
+{prompt}
+
+STRICT RULES:
+- Do NOT repeat any previous questions
+- Avoid common/basic questions
+- Try new patterns
+
+Previous questions:
+{history_text}
+"""
+        }]
     }
 
     try:
@@ -22,11 +49,11 @@ def fetch_quiz():
         print(result)
 
         # =========================
-        # ❌ HANDLE API ERROR FIRST
+        # ❌ HANDLE API ERROR
         # =========================
         if "error" in result:
             print("❌ API Error:", result["error"]["message"])
-            return fallback_quiz(), True   # ✅ fallback flag
+            return fallback_quiz(), True
 
         # =========================
         # ✅ NORMAL FLOW
@@ -36,7 +63,30 @@ def fetch_quiz():
         match = re.search(r"\[.*\]", content, re.DOTALL)
 
         if match:
-            return json.loads(match.group(0)), False  # ✅ success
+            quiz = json.loads(match.group(0))
+
+            filtered_quiz = []
+
+            for q in quiz:
+                question_text = clean_question(q["question"])
+
+                if not is_duplicate(question_text, memory):
+                    filtered_quiz.append(q)
+                    add_to_memory(q["question"], memory)
+
+            # =========================
+            # ⚠️ IF ALL DUPLICATES
+            # =========================
+            if not filtered_quiz:
+                print("⚠️ All questions repeated → using partial fallback")
+                filtered_quiz = quiz[:2]  # keep some questions
+
+            # =========================
+            # 💾 SAVE MEMORY
+            # =========================
+            save_memory(memory)
+
+            return filtered_quiz, False
 
         raise Exception("Invalid JSON format")
 
@@ -44,7 +94,7 @@ def fetch_quiz():
         print(f"❌ Error generating quiz: {e}")
         print("⚠️ Using fallback quiz")
 
-        return fallback_quiz(), True   # ✅ fallback flag
+        return fallback_quiz(), True
 
 
 # =========================
