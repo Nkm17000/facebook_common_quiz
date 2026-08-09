@@ -1,44 +1,67 @@
 from services.quiz_service import fetch_quiz
 from utils.file_utils import cleanup
-from config import OUTPUT_VIDEO
-from config import OUTPUT_DIR
+from config import OUTPUT_VIDEO, OUTPUT_DIR
 from services.facebook_service import upload_video_to_facebook
 from services.video_service import generate_images, create_video
 import os
+
+
 def run_pipeline():
-    print("create output dir")
+    print("📁 Creating output dir...")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+
     print("📥 Fetching quiz...")
     quiz, is_fallback = fetch_quiz()
 
+    # ❌ Stop if fallback
     if is_fallback:
         print("🚫 Fallback detected → stopping pipeline")
         return
 
+    # ❌ Safety check
+    if not quiz or len(quiz) == 0:
+        print("❌ No quiz data received")
+        return
+
+    print(f"✅ {len(quiz)} questions loaded")
+
+    # =========================
+    # 🖼️ Generate images
+    # =========================
     print("🖼️ Generating images...")
     images = generate_images(quiz)
 
-    """print("📊 Adding answer slide...")
-    answer_img = generate_answer_slide(quiz)
-    images.extend(answer_img)"""
+    if not images:
+        print("❌ No images generated")
+        return
 
-   
+    # =========================
+    # 🎬 Create video
+    # =========================
     print("🎬 Creating video...")
     create_video(images, OUTPUT_VIDEO)
-    
+
     if not os.path.exists(OUTPUT_VIDEO):
         print("❌ Video not created. Skipping Facebook upload.")
         return
 
+    # =========================
+    # 📤 Upload to Facebook
+    # =========================
     print("📤 Uploading to Facebook...")
 
     upload_video_to_facebook(
         OUTPUT_VIDEO,
         caption="""📚 Daily Practice Quiz for SSC | UPSC | Bank | Railway
+
 👉 Boost your score daily 🚀 Drop your result in comments 👇
+
 #sscpreparation #upsc #bankexam #railwayexam #quiz"""
     )
 
+    # =========================
+    # 🧹 Cleanup
+    # =========================
     print("🧹 Cleaning up...")
     cleanup(images)
 

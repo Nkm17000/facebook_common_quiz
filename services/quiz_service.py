@@ -1,135 +1,51 @@
 import json
-import re
-import requests
-from config import GROQ_API_KEY, GROQ_URL, MODEL
-from services.prompt import prompt
+import os
+from utils.memory import load_memory, save_memory
 
-from utils.memory import load_memory, save_memory, is_duplicate, add_to_memory
-
-from utils.vector_memory import (
-    load_vector_store,
-    save_vector_store,
-    is_similar,
-    add_vector
-)
+QUIZ_DIR = "assets/quiz_data"
+BATCH_SIZE = 10
 
 
+def load_all_questions():
+    all_questions = []
 
-def clean_question(q):
-    # remove numbering like "1. ", "2) "
-    q = re.sub(r"^\d+[\).\s]*", "", q)
-    return q.strip().lower()
+    for file in os.listdir(QUIZ_DIR):
+        if file.endswith(".json"):
+            path = os.path.join(QUIZ_DIR, file)
+
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                all_questions.extend(data)
+
+    return all_questions
 
 
 def fetch_quiz():
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    # =========================
-    # 🧠 LOAD BOTH MEMORIES
-    # =========================
     memory = load_memory()
-    index, texts = load_vector_store()
+    counter = memory.get("counter", 0)
 
-    history_text = "\n".join(memory["questions"][-20:])
+    questions = load_all_questions()
+    total = len(questions)
 
-    payload = {
-        "model": MODEL,
-        "messages": [{
-            "role": "user",
-            "content": f"""
-{prompt}
+    if total == 0:
+        raise Exception("No questions found")
 
-STRICT RULES:
-- Do NOT repeat any previous questions
-- Avoid similar questions or rewording
-- Avoid common/basic questions
-- Try new patterns
+    # 🔁 reset if overflow
+    if counter >= total:
+        counter = 0
 
-Previous questions:
-{history_text}
-"""
-        }]
-    }
+    batch = questions[counter:counter + BATCH_SIZE]
 
-    try:
-        
-        response = requests.post(GROQ_URL, headers=headers, json=payload)
-        result = response.json()
+    # 🔁 wrap if end reached
+    if len(batch) < BATCH_SIZE:
+        remaining = BATCH_SIZE - len(batch)
+        batch.extend(questions[:remaining])
+        counter = remaining
+    else:
+        counter += BATCH_SIZE
 
-        print(result)
+    # 💾 save counter
+    memory["counter"] = counter
+    save_memory(memory)
 
-        # =========================
-        # ❌ HANDLE API ERROR
-        # =========================
-        if "error" in result:
-            print("❌ API Error:", result["error"]["message"])
-            return fallback_quiz(), True
-
-        # =========================
-        # ✅ NORMAL FLOW
-        # =========================
-        content = result["choices"][0]["message"]["content"]
-
-        match = re.search(r"\[.*\]", content, re.DOTALL)
-
-        if match:
-            quiz = json.loads(match.group(0))
-
-            filtered_quiz = []
-
-            for q in quiz:
-                question_text = clean_question(q["question"])
-
-                # 🔥 HYBRID CHECK (Exact + Semantic)
-                if (not is_duplicate(question_text, memory)) and \
-                   (not is_similar(question_text, index, texts)):
-
-                    filtered_quiz.append(q)
-
-                    # save to both memories
-                    add_to_memory(q["question"], memory)
-                    index, texts = add_vector(question_text, index, texts)
-
-            # =========================
-            # ⚠️ IF ALL DUPLICATES
-            # =========================
-            if not filtered_quiz:
-                print("⚠️ All questions repeated → using partial fallback")
-                filtered_quiz = quiz[:2]
-
-            # =========================
-            # 💾 SAVE BOTH MEMORIES
-            # =========================
-            save_memory(memory)
-            save_vector_store(index, texts)
-
-            return filtered_quiz, False
-
-        raise Exception("Invalid JSON format")
-
-    except Exception as e:
-        print(f"❌ Error generating quiz: {e}")
-        print("⚠️ Using fallback quiz")
-
-        return fallback_quiz(), True
-
-
-# =========================
-# ✅ FALLBACK QUIZ
-# =========================
-def fallback_quiz():
-    return [
-        {
-            "question": "Capital of India?",
-            "options": ["Delhi", "Mumbai", "Chennai", "Kolkata"],
-            "answer_index": 0
-        },
-        {
-            "question": "2 + 2 = ?",
-            "options": ["3", "4", "5", "6"],
-            "answer_index": 1
-        }
-    ]
+    return batch, False

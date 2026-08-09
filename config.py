@@ -5,42 +5,43 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # =========================
-# ENV VARIABLES
+# 🎥 VIDEO CONFIG
 # =========================
-
-# 🔐 AI API
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
-# 🎥 Video Config
-"""VIDEO_WIDTH = int(os.getenv("VIDEO_WIDTH", 1920))
-VIDEO_HEIGHT = int(os.getenv("VIDEO_HEIGHT", 1080))
-DURATION = int(os.getenv("VIDEO_DURATION", 3))"""
 
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920   # 🔥 vertical reels
-DURATION = 3    
+DURATION = 3
 
-MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
+# =========================
+# 🖼️ IMAGE CONFIG
+# =========================
 
-# 🖼️ Image Config
 WKHTML_PATH = os.getenv("WKHTMLTOIMAGE_PATH", "/usr/bin/wkhtmltoimage")
-IMGKIT_CONFIG = imgkit.config(wkhtmltoimage=WKHTML_PATH)
 
-# 🌐 API URL
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+try:
+    IMGKIT_CONFIG = imgkit.config(wkhtmltoimage=WKHTML_PATH)
+except:
+    print("⚠️ wkhtmltoimage not found, using default config")
+    IMGKIT_CONFIG = None
 
-# 📁 Output
+# =========================
+# 📁 OUTPUT CONFIG
+# =========================
+
 OUTPUT_DIR = "output"
 OUTPUT_VIDEO = f"{OUTPUT_DIR}/quiz_video.mp4"
 
 # =========================
-# 📘 FACEBOOK CONFIG (NEW)
+# 📘 FACEBOOK CONFIG
 # =========================
 
 FACEBOOK_PAGE_ID = os.getenv("FACEBOOK_PAGE_ID")
 FACEBOOK_ACCESS_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN")
 
-# ✅ Optional safety check 
+# =========================
+# ⚠️ SAFETY CHECKS
+# =========================
+
 if not FACEBOOK_ACCESS_TOKEN:
     print("⚠️ WARNING: FACEBOOK_ACCESS_TOKEN is not set")
 

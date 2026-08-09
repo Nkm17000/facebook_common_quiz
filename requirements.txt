@@ -1,12 +1,4 @@
 moviepy==1.0.3
 imgkit
-imageio
-imageio-ffmpeg
-numpy
-Pillow
 requests
-fastapi
-uvicorn
 python-dotenv
-faiss-cpu
-sentence-transformers
