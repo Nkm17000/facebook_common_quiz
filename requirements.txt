@@ -1,10 +1,6 @@
 moviepy==1.0.3
 imgkit
-imageio
-imageio-ffmpeg
-numpy
-Pillow
 requests
+python-dotenv
 fastapi
 uvicorn
-python-dotenv
