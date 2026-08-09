@@ -4,16 +4,15 @@ import requests
 from config import GROQ_API_KEY, GROQ_URL, MODEL
 from services.prompt import prompt
 
-# 🧠 Memory (exact match)
 from utils.memory import load_memory, save_memory, is_duplicate, add_to_memory
 
-# 🚀 Vector memory (semantic match)
 from utils.vector_memory import (
     load_vector_store,
     save_vector_store,
     is_similar,
-    add_to_vector_store
+    add_vector
 )
+
 
 
 def clean_question(q):
@@ -91,7 +90,7 @@ Previous questions:
 
                     # save to both memories
                     add_to_memory(q["question"], memory)
-                    index, texts = add_to_vector_store(question_text, index, texts)
+                    index, texts = add_vector(question_text, index, texts)
 
             # =========================
             # ⚠️ IF ALL DUPLICATES

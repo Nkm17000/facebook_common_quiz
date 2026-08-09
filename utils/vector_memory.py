@@ -29,12 +29,11 @@ def load_vector_store():
         except:
             texts = []
 
-    # ✅ Handle FAISS safely
     if os.path.exists(VECTOR_FILE):
         try:
             index = faiss.read_index(VECTOR_FILE)
         except Exception as e:
-            print("⚠️ FAISS index corrupted, recreating...", e)
+            print("⚠️ FAISS corrupted, recreating...", e)
             index = faiss.IndexFlatL2(384)
     else:
         index = faiss.IndexFlatL2(384)
@@ -49,16 +48,18 @@ def save_vector_store(index, texts):
         json.dump(texts, f, indent=2)
 
 
-def add_to_memory(question, index, texts):
+# ✅ FIXED NAME
+def add_vector(question, index, texts):
     embedding = model.encode([question])
     index.add(np.array(embedding).astype("float32"))
 
     texts.append(question)
 
-    save_vector_store(index, texts)
+    return index, texts   # ✅ return fixed
 
 
-def is_duplicate(question, index, texts, threshold=0.85):
+# ✅ FIXED NAME
+def is_similar(question, index, texts, threshold=0.85):
     if len(texts) == 0:
         return False
 
