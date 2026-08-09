@@ -1,51 +1,55 @@
 import json
 import os
+import random
 from utils.memory import load_memory, save_memory
 
 QUIZ_DIR = "assets/quiz_data"
-BATCH_SIZE = 10
+BATCH_SIZE = 2
 
 
-def load_all_questions():
-    all_questions = []
+def load_batch_from_file(path, start, batch_size):
+    """Load batch safely from a single file"""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-    for file in os.listdir(QUIZ_DIR):
-        if file.endswith(".json"):
-            path = os.path.join(QUIZ_DIR, file)
+        if start >= len(data):
+            return []  # ✅ skip if overflow
 
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                all_questions.extend(data)
+        return data[start:start + batch_size]
 
-    return all_questions
+    except Exception as e:
+        print(f"❌ Error reading {path}: {e}")
+        return []
 
 
 def fetch_quiz():
     memory = load_memory()
     counter = memory.get("counter", 0)
 
-    questions = load_all_questions()
-    total = len(questions)
+    all_questions = []
 
-    if total == 0:
-        raise Exception("No questions found")
+    files = [f for f in os.listdir(QUIZ_DIR) if f.endswith(".json")]
 
-    # 🔁 reset if overflow
-    if counter >= total:
-        counter = 0
+    if not files:
+        raise Exception("No JSON files found")
 
-    batch = questions[counter:counter + BATCH_SIZE]
+    # 🔥 STEP 1: Fetch from EACH file
+    for file in files:
+        path = os.path.join(QUIZ_DIR, file)
 
-    # 🔁 wrap if end reached
-    if len(batch) < BATCH_SIZE:
-        remaining = BATCH_SIZE - len(batch)
-        batch.extend(questions[:remaining])
-        counter = remaining
-    else:
-        counter += BATCH_SIZE
+        batch = load_batch_from_file(path, counter, BATCH_SIZE)
 
-    # 💾 save counter
+        if batch:  # ✅ only add if data exists
+            all_questions.extend(batch)
+
+    # 🔥 STEP 2: Shuffle combined result
+    random.shuffle(all_questions)
+
+    # 🔥 STEP 3: Increase counter
+    counter += BATCH_SIZE
+
     memory["counter"] = counter
     save_memory(memory)
 
-    return batch, False
+    return all_questions, False

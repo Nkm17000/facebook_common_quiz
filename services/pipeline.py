@@ -52,11 +52,16 @@ def run_pipeline():
 
     upload_video_to_facebook(
         OUTPUT_VIDEO,
-        caption="""📚 Daily Practice Quiz for SSC | UPSC | Bank | Railway
+        caption="""📊 Exam Focus Caption
 
-👉 Boost your score daily 🚀 Drop your result in comments 👇
+📚 Daily practice for serious aspirants
 
-#sscpreparation #upsc #bankexam #railwayexam #quiz"""
+🎯 SSC | UPSC | Banking | Railway
+
+💬 Drop your answer below
+
+#sscpreparation #upsc #bankexam #railwayexam
+#mocktest #aptitude #reasoning #govtjobs #studyreels"""
     )
 
     # =========================
