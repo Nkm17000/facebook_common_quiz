@@ -23,11 +23,27 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # ✅ Prevent timeout issues
 
     steps:
       # ✅ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      # 🚀 Cache pip (FASTER RUNS)
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      # ⚡ Increase memory (VERY IMPORTANT for FAISS)
+      - name: Increase swap memory
+        run: |
+          sudo fallocate -l 2G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
 
       # ✅ Install system dependencies
       - name: Install system dependencies
@@ -59,7 +75,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ✅ Ensure memory folder exists
+      # ✅ Ensure memory folder + files exist
       - name: Prepare memory folder
         run: |
           mkdir -p data/history
@@ -83,7 +99,7 @@ jobs:
       - name: List generated files
         run: ls -R
 
-      # ✅ Commit memory back to repo
+      # ✅ Commit memory (JSON + FAISS files)
       - name: Commit quiz memory
         run: |
           git config --global user.name "github-actions"
