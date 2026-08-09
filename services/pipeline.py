@@ -52,11 +52,11 @@ def run_pipeline():
 
     upload_video_to_facebook(
         OUTPUT_VIDEO,
-        caption="""📊Math Exam Focus Caption
+        caption="""📊English Exam Focus Caption
 
 📚 Daily practice for serious aspirants
 
-🎯 SSC | UPSC | Banking | Railway
+🎯 SSC | UPSC | Banking | Railway | RAS | IAS 
 
 💬 Drop your answer below
 
