@@ -37,13 +37,7 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
-      # ⚡ Increase memory (VERY IMPORTANT for FAISS)
-      - name: Increase swap memory
-        run: |
-          sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile || true
+
          
       # ✅ Install system dependencies
       - name: Install system dependencies
