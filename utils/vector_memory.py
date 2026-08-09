@@ -1,75 +1,72 @@
 import os
 import json
-import numpy as np
 import faiss
+import numpy as np
 from sentence_transformers import SentenceTransformer
 
 VECTOR_FILE = "data/history/vectors.index"
-TEXT_FILE = "data/history/vector_texts.json"
+TEXT_FILE = "data/history/texts.json"
 
-# ✅ Load model once
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
-# =========================
-# 🧠 LOAD VECTOR STORE (SAFE)
-# =========================
-def load_vector_store():
-    try:
-        if os.path.exists(VECTOR_FILE) and os.path.exists(TEXT_FILE):
-            index = faiss.read_index(VECTOR_FILE)
-
-            with open(TEXT_FILE, "r") as f:
-                texts = json.load(f)
-
-            return index, texts
-
-    except Exception as e:
-        print("⚠️ FAISS index corrupted, recreating...", e)
-
-    # ✅ fallback: create new index
-    index = faiss.IndexFlatL2(384)
-    return index, []
-
-
-# =========================
-# 💾 SAVE VECTOR STORE (ATOMIC)
-# =========================
-def save_vector_store(index, texts):
+def ensure_files():
     os.makedirs("data/history", exist_ok=True)
 
-    # ✅ atomic write (prevents corruption)
-    temp_file = VECTOR_FILE + ".tmp"
-    faiss.write_index(index, temp_file)
-    os.replace(temp_file, VECTOR_FILE)
+    if not os.path.exists(TEXT_FILE):
+        with open(TEXT_FILE, "w") as f:
+            json.dump([], f)
+
+
+def load_vector_store():
+    ensure_files()
+
+    texts = []
+    if os.path.exists(TEXT_FILE):
+        try:
+            with open(TEXT_FILE, "r") as f:
+                texts = json.load(f)
+        except:
+            texts = []
+
+    # ✅ Handle FAISS safely
+    if os.path.exists(VECTOR_FILE):
+        try:
+            index = faiss.read_index(VECTOR_FILE)
+        except Exception as e:
+            print("⚠️ FAISS index corrupted, recreating...", e)
+            index = faiss.IndexFlatL2(384)
+    else:
+        index = faiss.IndexFlatL2(384)
+
+    return index, texts
+
+
+def save_vector_store(index, texts):
+    faiss.write_index(index, VECTOR_FILE)
 
     with open(TEXT_FILE, "w") as f:
         json.dump(texts, f, indent=2)
 
 
-# =========================
-# 🔍 CHECK SIMILARITY
-# =========================
-def is_similar(question, index, texts, threshold=0.6):
+def add_to_memory(question, index, texts):
+    embedding = model.encode([question])
+    index.add(np.array(embedding).astype("float32"))
+
+    texts.append(question)
+
+    save_vector_store(index, texts)
+
+
+def is_duplicate(question, index, texts, threshold=0.85):
     if len(texts) == 0:
         return False
 
-    q_vec = model.encode([question])
-    D, I = index.search(np.array(q_vec), 1)
+    embedding = model.encode([question])
+    D, I = index.search(np.array(embedding).astype("float32"), k=1)
 
-    return D[0][0] < threshold
+    similarity = 1 - D[0][0]
 
+    print(f"🔍 Similarity: {similarity}")
 
-# =========================
-# ➕ ADD TO VECTOR STORE
-# =========================
-def add_to_vector_store(question, index, texts):
-    vec = model.encode([question])
-    index.add(np.array(vec))
-    texts.append(question)
-
-    # ✅ limit size (important for GitHub repo)
-    if len(texts) > 1000:
-        texts = texts[-1000:]
-
-    return index, texts
+    return similarity > threshold
